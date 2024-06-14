@@ -51,7 +51,7 @@ export class ProjectsService {
                             include: {
                                 taskField: {
                                     include: {
-                                        taskFiledKInt: true,
+                                        taskFieldInt: true,
                                         taskFiledStr: true,
                                         taskFieldPriority: true
                                     }
@@ -77,7 +77,7 @@ export class ProjectsService {
                             include: {
                                 taskField: {
                                     include: {
-                                        taskFiledKInt: true,
+                                        taskFieldInt: true,
                                         taskFiledStr: true,
                                         taskFieldPriority: true
                                     }
@@ -156,6 +156,7 @@ export class ProjectsService {
     async createTasks(createTaskstDto: CreateTasksDto, authorId: number, tasksListId: number) {
         if(isNaN(tasksListId)) throw new Error("Некорректный id");
         const taskList = await this.findTasksListById(authorId, tasksListId);
+        // @ts-expect-error
         if(taskList) return await this.databaseService.tasks.create({ data: { ...createTaskstDto, projectId: taskList.projectId, tasksListId: tasksListId, authorId: authorId } });
         
         
@@ -187,7 +188,7 @@ export class ProjectsService {
                     }
                 });
             }
-            if(patchTaskDto.taskFieldType == "str" && taskFiled.taskFiledKInt.length > 0){
+            if(patchTaskDto.taskFieldType == "str" && taskFiled.taskFieldInt.length > 0){
                 await this.databaseService.taskFieldInt.delete({
                     where: {
                         taskId_taskFieldId: {
@@ -229,7 +230,7 @@ export class ProjectsService {
             include: {
                 taskField: {
                     include: {
-                        taskFiledKInt: true,
+                        taskFieldInt: true,
                         taskFiledStr: true,
                         taskFieldPriority: true
                     }
@@ -299,7 +300,7 @@ export class ProjectsService {
         const taskField = await this.databaseService.taskField.findUnique({
             where: {id: taskFieldId} ,
             include: {
-                taskFiledKInt: true,
+                taskFieldInt: true,
                 taskFiledStr: true,
                 taskFieldPriority: true
             }
@@ -324,7 +325,7 @@ export class ProjectsService {
                     }
                 });
             }
-            if(updateTasksFiledDto.taskFieldType == "str" && taskField.taskFiledKInt.length > 0){
+            if(updateTasksFiledDto.taskFieldType == "str" && taskField.taskFieldInt.length > 0){
                 await this.databaseService.taskFieldInt.delete({
                     where: {
                         taskId_taskFieldId: {
@@ -334,7 +335,7 @@ export class ProjectsService {
                     }
                 });
             }
-            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFiledStr.length > 0){
+            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFieldInt.length > 0){
                 await this.databaseService.taskFieldStr.delete({
                     where: {
                         taskId_taskFieldId: {
@@ -357,7 +358,7 @@ export class ProjectsService {
             await this.databaseService.taskFieldPriority.create({data: {taskId: taskField.taskId, taskFieldId: taskField.id, priority: taskFieldValueDto.priority}});
         if(taskField.taskFieldType == "str" && taskFieldValueDto.taskFieldStr && !(taskField.taskFiledStr[0]))
             await this.databaseService.taskFieldStr.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldStr}});
-        if(taskField.taskFieldType == "int" && taskFieldValueDto.taskFieldInt && !(taskField.taskFiledKInt[0]))
+        if(taskField.taskFieldType == "int" && taskFieldValueDto.taskFieldInt && !(taskField.taskFieldInt[0]))
             await this.databaseService.taskFieldInt.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldInt}});
         return await this.findTaskFieldById(authorId, taskFieldId);
     }
@@ -393,7 +394,7 @@ export class ProjectsService {
         else if (taskField.taskFieldType == "str" && taskField.taskFiledStr.length == 0 && taskFieldValueDto.taskFieldStr){
             await this.databaseService.taskFieldStr.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldStr}});
         }
-        if(taskField.taskFieldType == "int" && taskField.taskFiledKInt.length > 0 && taskFieldValueDto.taskFieldInt){
+        if(taskField.taskFieldType == "int" && taskField.taskFieldInt.length > 0 && taskFieldValueDto.taskFieldInt){
             await this.databaseService.taskFieldInt.update({
                 where: {
                   taskId_taskFieldId: {
@@ -404,7 +405,7 @@ export class ProjectsService {
                 data: {value: taskFieldValueDto.taskFieldInt},
             });
         }
-        else if(taskField.taskFieldType == "int" && taskField.taskFiledKInt.length == 0 && taskFieldValueDto.taskFieldInt){
+        else if(taskField.taskFieldType == "int" && taskField.taskFieldInt.length == 0 && taskFieldValueDto.taskFieldInt){
             await this.databaseService.taskFieldInt.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldInt}});
         }
         return await this.findTaskFieldById(authorId, taskFieldId);
@@ -423,7 +424,7 @@ export class ProjectsService {
                 }
             }});
         }
-        if(taskField.taskFieldType == "int" && taskFieldURLSplited.includes("int") && taskField.taskFiledKInt[0]){
+        if(taskField.taskFieldType == "int" && taskFieldURLSplited.includes("int") && taskField.taskFieldInt[0]){
             await this.databaseService.taskFieldInt.delete({where: {
                 taskId_taskFieldId: {
                     taskId: taskField.taskId,

@@ -71,7 +71,7 @@ model Tasks {
   description String? @db.VarChar(255)
   assignedAt DateTime @default(now())
   taskField TaskField[]
-  taskFiledKInt TaskFieldInt[]
+  taskFieldInt TaskFieldInt[]
   taskFiledStr TaskFieldStr[]
   taskFieldPriority TaskFieldPriority[]
 }
@@ -84,7 +84,7 @@ model TaskField {
   taskId Int
   taskFieldType String @db.VarChar(3)
   taskFieldTitle String @db.VarChar(100)
-  taskFiledKInt TaskFieldInt[]
+  taskFieldInt TaskFieldInt[]
   taskFiledStr TaskFieldStr[]
   taskFieldPriority TaskFieldPriority[]
 }
