@@ -85,7 +85,7 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Поменять место листа'})
+  @ApiOperation({summary: 'Поменять листы местами'})
   @ApiResponse({status: 200})
   @Patch('listToList/:listToList')
   async moveListToList(@Req() req: Request, @Param('listToList') listToList: string ) {
@@ -94,7 +94,7 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Изменить лист задач для задачи'})
+  @ApiOperation({summary: 'Изменить лист задач для задачи. Пример ввода: /1-1 где первое значение - id задачи, второе - id листа в который она переместится'})
   @ApiResponse({status: 200})
   @Patch('tasksToList/:tasksToList')
   async moveTaskToList(@Req() req: Request, @Param('tasksToList') tasksToList: string ) {
@@ -146,7 +146,7 @@ export class ProjectsController {
 
   @UsePipes(ValidationPipe)
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Изменить задачу'})
+  @ApiOperation({summary: 'Изменить задачу. Пример ввода: 1&1 первое число - taskId, второе taskFieldId (можно не писать его если его нет)'})
   @ApiResponse({status: 200})
   @Patch('task/:taskURL')
   async patchTask(@Body() patchTaskDto: UpdateTasksDto,
@@ -156,7 +156,7 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Поменять место задачи'})
+  @ApiOperation({summary: 'Поменять задачи местами по их id. Пример ввода: 1-2'})
   @ApiResponse({status: 200})
   @Patch('tasksToTask/:tasksToTask')
   async moveTaskToTask(@Req() req: Request, @Param('tasksToTask') tasksToTask: string ) {
@@ -231,11 +231,11 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Удаление значений поля задачи'})
+  @ApiOperation({summary: 'Удаление значений поля задачи.'})
   @ApiResponse({status: 200})
-  @Delete('tasksFiledValue/:taskFieldURL')
-  async deleteTaskFieldValue(@Req() req: Request, @Param('taskFieldURL') taskFieldURL: string) {
+  @Delete('tasksFiledValue/:taskFieldid')
+  async deleteTaskFieldValue(@Req() req: Request, @Param('taskFieldid') taskFieldid: string) {
     // @ts-expect-error
-    return await this.projectsService.deleteTaskFieldValue(req.user.id, taskFieldURL);
+    return await this.projectsService.deleteTaskFieldValue(req.user.id, +taskFieldid);
   }
 }

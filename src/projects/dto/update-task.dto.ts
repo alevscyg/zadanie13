@@ -26,7 +26,7 @@ export class UpdateTasksDto{
     @IsOptional()
     @IsString({message: 'Должно быть строкой'})
     @Length(1, 10, {message: 'От 1 до 10 символов'})
-    readonly priority?: string;
+    readonly taskPriority: string;
     @ApiProperty({example: 1, description: 'Числовое поле задачи'})
     @IsOptional()
     @IsNumber({}, {message: "Должно быть числом"})

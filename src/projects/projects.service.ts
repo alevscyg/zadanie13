@@ -49,11 +49,11 @@ export class ProjectsService {
                     include: {
                         tasks: {
                             include: {
+                                taskPriority : true,
                                 taskField: {
                                     include: {
                                         taskFieldInt: true,
                                         taskFiledStr: true,
-                                        taskFieldPriority: true
                                     }
                                 }
                             }
@@ -75,11 +75,11 @@ export class ProjectsService {
                     include: {
                         tasks: {
                             include: {
+                                taskPriority : true,
                                 taskField: {
                                     include: {
                                         taskFieldInt: true,
                                         taskFiledStr: true,
-                                        taskFieldPriority: true
                                     }
                                 }
                             }
@@ -156,20 +156,35 @@ export class ProjectsService {
     async createTasks(createTaskstDto: CreateTasksDto, authorId: number, tasksListId: number) {
         if(isNaN(tasksListId)) throw new Error("Некорректный id");
         const taskList = await this.findTasksListById(authorId, tasksListId);
-        // @ts-expect-error
-        if(taskList) return await this.databaseService.tasks.create({ data: { ...createTaskstDto, projectId: taskList.projectId, tasksListId: tasksListId, authorId: authorId } });
-        
-        
+        if(taskList){
+            const task = await this.databaseService.tasks.create({ data: {title: createTaskstDto.title, description: createTaskstDto.description, projectId: taskList.projectId, tasksListId: tasksListId, authorId: authorId } });
+            if(["высокий", "средний", "низкий"].includes(createTaskstDto.taskPriority) ){
+                await this.databaseService.taskPriority.create({data: {taskId: task.id, tasksListId: taskList.id, taskPriority: createTaskstDto.taskPriority}});
+            }
+            if(createTaskstDto.taskFieldType && createTaskstDto.taskFieldTitle){
+                await this.createTaskField({taskFieldTitle: createTaskstDto.taskFieldTitle, taskFieldType: createTaskstDto.taskFieldType, taskFieldInt: createTaskstDto.taskFieldInt, taskFieldStr: createTaskstDto.taskFieldStr}, authorId, task.id);
+            }
+            return await this.findTaskById(authorId, task.id);
+        }
     }
 
     async patchTask(patchTaskDto: UpdateTasksDto, authorId: number, taskURL: string){
         const taskURLSplit = taskURL.split('&');
         const taskId = Number(taskURLSplit[0]);
-        const taskFieldId = Number(taskURLSplit[1]);
-        if(isNaN(taskId) || isNaN(taskFieldId)) throw new Error("Некорректный id задачи или ее поля");
+        if(isNaN(taskId)) throw new Error("Некорректный id задачи");
         const task = await this.findTaskById(authorId, taskId);
-        const taskFiled = await this.findTaskFieldById(authorId, taskFieldId);
         if(task){
+            if(patchTaskDto.taskPriority != task.taskPriority[0].taskPriority && patchTaskDto.taskPriority != undefined){
+                await this.databaseService.taskPriority.update({
+                    where: {
+                      taskId_tasksListId: {
+                        taskId: taskId,
+                        tasksListId: task.tasksListId
+                      }
+                    },
+                    data: {taskPriority: patchTaskDto.taskPriority},
+                });
+            }
             if(task.description != patchTaskDto.description || task.title != patchTaskDto.title){
                 await this.databaseService.tasks.update({where: {
                     id: taskId },
@@ -179,37 +194,48 @@ export class ProjectsService {
                     }
                 });
             }
-            if(taskFiled.taskFieldTitle != patchTaskDto.taskFieldTitle || taskFiled.taskFieldType != patchTaskDto.taskFieldType){
-                await this.databaseService.taskField.update({where: {
-                    id: taskFieldId },
-                    data: {
-                        taskFieldTitle: patchTaskDto.taskFieldTitle,
-                        taskFieldType: patchTaskDto.taskFieldType
-                    }
-                });
-            }
-            if(patchTaskDto.taskFieldType == "str" && taskFiled.taskFieldInt.length > 0){
-                await this.databaseService.taskFieldInt.delete({
-                    where: {
-                        taskId_taskFieldId: {
-                            taskId: taskFiled.taskId,
-                            taskFieldId: taskFieldId
+            if(taskURLSplit[1]){
+                const taskFieldId = Number(taskURLSplit[1]);
+                if((patchTaskDto.taskFieldType && patchTaskDto.taskFieldTitle)){
+                    const taskFiled = await this.findTaskFieldById(authorId, taskFieldId);
+                    if(taskFiled){
+                        if(taskFiled.taskFieldTitle != patchTaskDto.taskFieldTitle || taskFiled.taskFieldType != patchTaskDto.taskFieldType){
+                            await this.databaseService.taskField.update({where: {
+                                id: taskFieldId },
+                                data: {
+                                    taskFieldTitle: patchTaskDto.taskFieldTitle,
+                                    taskFieldType: patchTaskDto.taskFieldType
+                                }
+                            });
+                        }
+                        if(patchTaskDto.taskFieldType == "str" && taskFiled.taskFieldInt.length > 0){
+                            await this.databaseService.taskFieldInt.delete({
+                                where: {
+                                    taskId_taskFieldId: {
+                                        taskId: taskFiled.taskId,
+                                        taskFieldId: taskFieldId
+                                    }
+                                }
+                            });
+                        }
+                        else if (patchTaskDto.taskFieldType == "int" && taskFiled.taskFiledStr.length > 0){
+                            await this.databaseService.taskFieldStr.delete({
+                                where: {
+                                    taskId_taskFieldId: {
+                                        taskId: taskFiled.taskId,
+                                        taskFieldId: taskFieldId
+                                    }
+                                }
+                            });
                         }
                     }
-                });
-            }
-            else if (patchTaskDto.taskFieldType == "int" && taskFiled.taskFiledStr.length > 0){
-                await this.databaseService.taskFieldStr.delete({
-                    where: {
-                        taskId_taskFieldId: {
-                            taskId: taskFiled.taskId,
-                            taskFieldId: taskFieldId
-                        }
+                    else{
+                        await this.createTaskField({taskFieldTitle: patchTaskDto.taskFieldTitle , taskFieldType: patchTaskDto.taskFieldType, taskFieldStr: patchTaskDto.taskFieldStr, taskFieldInt: patchTaskDto.taskFieldInt}, authorId, taskId);
                     }
-                });
+                }
+                if(patchTaskDto.taskFieldInt || patchTaskDto.taskFieldStr)
+                    await this.updateTaskFieldValue({taskFieldInt: patchTaskDto.taskFieldInt, taskFieldStr: patchTaskDto.taskFieldStr}, authorId, taskFieldId);
             }
-            if(patchTaskDto.priority || patchTaskDto.taskFieldInt || patchTaskDto.taskFieldStr)
-                await this.updateTaskFieldValue({priority: patchTaskDto.priority, taskFieldInt: patchTaskDto.taskFieldInt, taskFieldStr: patchTaskDto.taskFieldStr}, authorId, taskFieldId);
             return await this.findTaskById(authorId, taskId);
         }
     }
@@ -228,11 +254,11 @@ export class ProjectsService {
         const task = await this.databaseService.tasks.findUnique({
             where: {id: taskId},
             include: {
+                taskPriority : true,
                 taskField: {
                     include: {
                         taskFieldInt: true,
                         taskFiledStr: true,
-                        taskFieldPriority: true
                     }
                 }
             }
@@ -246,12 +272,21 @@ export class ProjectsService {
     async moveTaskToTaskList(tasksToListURL: string, authorId: number) {
         const tasksToList = tasksToListURL.split('-');
         const taskId = Number(tasksToList[0]);
-        if(await this.findTaskById(authorId, taskId)){
+        const newTaskListId = Number(tasksToList[1]);
+        const task = await this.findTaskById(authorId, taskId);
+        if(task){
+            await this.databaseService.taskPriority.update({where: {
+                taskId_tasksListId: {
+                    taskId: taskId,
+                    tasksListId: task.tasksListId
+                }},
+                data: {tasksListId: newTaskListId}
+            });
             await this.databaseService.tasks.update({
                 where: {
                 id: taskId
                 },
-                data: {tasksListId: Number(tasksToList[1])},
+                data: {tasksListId: newTaskListId},
             });
         }
         
@@ -285,8 +320,6 @@ export class ProjectsService {
         const task = await this.findTaskById(authorId, taskId);
         if(task) {
             const taskField = await this.databaseService.taskField.create({data: {taskFieldType: createTasksFiledDto.taskFieldType, taskFieldTitle: createTasksFiledDto.taskFieldTitle, authorId: authorId, taskId: taskId, projectId: task.projectId}});
-            if(["высокий", "средний", "низкий"].includes(createTasksFiledDto.priority))
-                await this.databaseService.taskFieldPriority.create({data: {taskId: taskId, taskFieldId: taskField.id, priority: createTasksFiledDto.priority}});
             if(createTasksFiledDto.taskFieldType == "str" && createTasksFiledDto.taskFieldStr)
                 await this.databaseService.taskFieldStr.create({data: {taskFieldId: taskField.id, taskId: taskId, value: createTasksFiledDto.taskFieldStr}});
             else if(createTasksFiledDto.taskFieldType == "int" && createTasksFiledDto.taskFieldInt)
@@ -302,7 +335,6 @@ export class ProjectsService {
             include: {
                 taskFieldInt: true,
                 taskFiledStr: true,
-                taskFieldPriority: true
             }
         });
         if(taskField)
@@ -345,8 +377,8 @@ export class ProjectsService {
                     }
                 });
             }
-            if(updateTasksFiledDto.priority || updateTasksFiledDto.taskFieldInt || updateTasksFiledDto.taskFieldStr)
-                await this.updateTaskFieldValue({priority: updateTasksFiledDto.priority, taskFieldInt: updateTasksFiledDto.taskFieldInt, taskFieldStr: updateTasksFiledDto.taskFieldStr}, authorId, taskFieldId);
+            if(updateTasksFiledDto.taskFieldInt || updateTasksFiledDto.taskFieldStr)
+                await this.updateTaskFieldValue({taskFieldInt: updateTasksFiledDto.taskFieldInt, taskFieldStr: updateTasksFiledDto.taskFieldStr}, authorId, taskFieldId);
             return await this.findTaskFieldById(authorId, taskFieldId);
         }
     }
@@ -354,9 +386,6 @@ export class ProjectsService {
     async createTaskFieldValue(taskFieldValueDto: TasksFieldValueDto, authorId: number, taskFieldId: number){
         if(isNaN(taskFieldId)) throw new Error("Некорректный id");
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
-        if(["высокий", "средний", "низкий"].includes(taskFieldValueDto.priority) && !(taskField.taskFieldPriority[0]))
-            await this.databaseService.taskFieldPriority.create({data: {taskId: taskField.taskId, taskFieldId: taskField.id, priority: taskFieldValueDto.priority}});
-        if(taskField.taskFieldType == "str" && taskFieldValueDto.taskFieldStr && !(taskField.taskFiledStr[0]))
             await this.databaseService.taskFieldStr.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldStr}});
         if(taskField.taskFieldType == "int" && taskFieldValueDto.taskFieldInt && !(taskField.taskFieldInt[0]))
             await this.databaseService.taskFieldInt.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldInt}});
@@ -366,20 +395,6 @@ export class ProjectsService {
     async updateTaskFieldValue(taskFieldValueDto: TasksFieldValueDto, authorId: number, taskFieldId: number){
         if(isNaN(taskFieldId)) throw new Error("Некорректный id");
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
-        if(["высокий", "средний", "низкий"].includes(taskFieldValueDto.priority) && taskField.taskFieldPriority.length > 0 && taskFieldValueDto.priority){
-            await this.databaseService.taskFieldPriority.update({
-                where: {
-                  taskId_taskFieldId: {
-                    taskId: taskField.taskId,
-                    taskFieldId: taskFieldId
-                  }
-                },
-                data: {priority: taskFieldValueDto.priority},
-            });
-        }
-        else if (["высокий", "средний", "низкий"].includes(taskFieldValueDto.priority) && taskField.taskFieldPriority.length == 0 && taskFieldValueDto.priority){
-            await this.databaseService.taskFieldPriority.create({data: {taskId: taskField.taskId, taskFieldId: taskField.id, priority: taskFieldValueDto.priority}});
-        }
         if(taskField.taskFieldType == "str" && taskField.taskFiledStr.length > 0 && taskFieldValueDto.taskFieldStr){
             await this.databaseService.taskFieldStr.update({
                 where: {
@@ -411,35 +426,25 @@ export class ProjectsService {
         return await this.findTaskFieldById(authorId, taskFieldId);
     }
 
-    async deleteTaskFieldValue(authorId: number, taskFieldURL: string){
-        const taskFieldURLSplited = taskFieldURL.split('&');
-        const taskFieldIdURL = Number(taskFieldURLSplited[0]);
-        if(isNaN(taskFieldIdURL)) throw new Error("Некорректный id");
-        const taskField = await this.findTaskFieldById(authorId, taskFieldIdURL);
-        if(taskFieldURLSplited.includes("priority") && taskField.taskFieldPriority[0]){
-            await this.databaseService.taskFieldPriority.delete({where: {
-                taskId_taskFieldId: {
-                    taskId: taskField.taskId,
-                    taskFieldId: taskFieldIdURL
-                }
-            }});
-        }
-        if(taskField.taskFieldType == "int" && taskFieldURLSplited.includes("int") && taskField.taskFieldInt[0]){
+    async deleteTaskFieldValue(authorId: number, taskFieldid: number){
+        if(isNaN(taskFieldid)) throw new Error("Некорректный id");
+        const taskField = await this.findTaskFieldById(authorId, taskFieldid);
+        if(taskField.taskFieldType == "int"){
             await this.databaseService.taskFieldInt.delete({where: {
                 taskId_taskFieldId: {
                     taskId: taskField.taskId,
-                    taskFieldId: taskFieldIdURL
+                    taskFieldId: taskFieldid
                 }
             }});
         }
-        else if(taskField.taskFieldType == "str" && taskFieldURLSplited.includes("str") && taskField.taskFiledStr[0]){
+        else if(taskField.taskFieldType == "str"){
             await this.databaseService.taskFieldStr.delete({where: {
                 taskId_taskFieldId: {
                     taskId: taskField.taskId,
-                    taskFieldId: taskFieldIdURL
+                    taskFieldId: taskFieldid
                 }
             }});
         }
-        return await this.findTaskFieldById(authorId, taskFieldIdURL);
+        return await this.findTaskFieldById(authorId, taskFieldid);
     }
 }

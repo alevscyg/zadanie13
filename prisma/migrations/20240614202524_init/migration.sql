@@ -64,6 +64,15 @@ CREATE TABLE "Tasks" (
 );
 
 -- CreateTable
+CREATE TABLE "TaskPriority" (
+    "taskId" INTEGER NOT NULL,
+    "tasksListId" INTEGER NOT NULL,
+    "taskPriority" VARCHAR(10) NOT NULL,
+
+    CONSTRAINT "TaskPriority_pkey" PRIMARY KEY ("taskId","tasksListId")
+);
+
+-- CreateTable
 CREATE TABLE "TaskField" (
     "id" SERIAL NOT NULL,
     "authorId" INTEGER NOT NULL,
@@ -93,15 +102,6 @@ CREATE TABLE "TaskFieldStr" (
     CONSTRAINT "TaskFieldStr_pkey" PRIMARY KEY ("taskId","taskFieldId")
 );
 
--- CreateTable
-CREATE TABLE "TaskFieldPriority" (
-    "taskId" INTEGER NOT NULL,
-    "taskFieldId" INTEGER NOT NULL,
-    "priority" VARCHAR(10) NOT NULL,
-
-    CONSTRAINT "TaskFieldPriority_pkey" PRIMARY KEY ("taskId","taskFieldId")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -121,6 +121,12 @@ ALTER TABLE "TasksList" ADD CONSTRAINT "TasksList_projectId_fkey" FOREIGN KEY ("
 ALTER TABLE "Tasks" ADD CONSTRAINT "Tasks_tasksListId_fkey" FOREIGN KEY ("tasksListId") REFERENCES "TasksList"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "TaskPriority" ADD CONSTRAINT "TaskPriority_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Tasks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TaskPriority" ADD CONSTRAINT "TaskPriority_tasksListId_fkey" FOREIGN KEY ("tasksListId") REFERENCES "TasksList"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "TaskField" ADD CONSTRAINT "TaskField_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Tasks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -134,9 +140,3 @@ ALTER TABLE "TaskFieldStr" ADD CONSTRAINT "TaskFieldStr_taskId_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "TaskFieldStr" ADD CONSTRAINT "TaskFieldStr_taskFieldId_fkey" FOREIGN KEY ("taskFieldId") REFERENCES "TaskField"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TaskFieldPriority" ADD CONSTRAINT "TaskFieldPriority_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Tasks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TaskFieldPriority" ADD CONSTRAINT "TaskFieldPriority_taskFieldId_fkey" FOREIGN KEY ("taskFieldId") REFERENCES "TaskField"("id") ON DELETE CASCADE ON UPDATE CASCADE;

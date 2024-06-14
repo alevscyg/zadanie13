@@ -58,6 +58,7 @@ model TasksList {
   description String? @db.VarChar(255)
   assignedAt DateTime @default(now())
   tasks Tasks[]
+  taskPriority TaskPriority[]
 }
 
 model Tasks {
@@ -71,9 +72,18 @@ model Tasks {
   description String? @db.VarChar(255)
   assignedAt DateTime @default(now())
   taskField TaskField[]
+  taskPriority TaskPriority[]
   taskFieldInt TaskFieldInt[]
   taskFiledStr TaskFieldStr[]
-  taskFieldPriority TaskFieldPriority[]
+}
+model TaskPriority {
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  tasksList TasksList @relation(fields: [tasksListId], references: [id], onDelete: Cascade)
+  tasksListId Int
+  taskPriority String @db.VarChar(10)
+  
+  @@id([taskId, tasksListId])
 }
 
 model TaskField {
@@ -86,7 +96,6 @@ model TaskField {
   taskFieldTitle String @db.VarChar(100)
   taskFieldInt TaskFieldInt[]
   taskFiledStr TaskFieldStr[]
-  taskFieldPriority TaskFieldPriority[]
 }
 
 model TaskFieldInt {
@@ -105,16 +114,6 @@ model TaskFieldStr {
   taskField TaskField @relation(fields: [taskFieldId], references: [id], onDelete: Cascade)
   taskFieldId Int
   value String @db.VarChar(255)
-  
-  @@id([taskId, taskFieldId])
-}
-
-model TaskFieldPriority {
-  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId Int
-  taskField TaskField @relation(fields: [taskFieldId], references: [id], onDelete: Cascade)
-  taskFieldId Int
-  priority String @db.VarChar(10)
   
   @@id([taskId, taskFieldId])
 }

@@ -12,11 +12,6 @@ export class UpdateTasksFieldDto{
     @IsString({message: 'Должно быть строкой'})
     @Length(1, 100, {message: 'От 1 до 100 символов'})
     readonly taskFieldTitle: string;
-    @ApiProperty({example: "средний", description: 'Приоритет задачи'})
-    @IsOptional()
-    @IsString({message: 'Должно быть строкой'})
-    @Length(1, 10, {message: 'От 1 до 10 символов'})
-    readonly priority?: string;
     @ApiProperty({example: 1, description: 'Числовое поле задачи'})
     @IsOptional()
     @IsNumber({}, {message: "Должно быть числом"})
