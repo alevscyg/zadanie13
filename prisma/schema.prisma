@@ -32,7 +32,7 @@ model Role {
 model UserRole {
   user User @relation(fields: [userid], references: [id], onDelete: Cascade)
   userid Int
-  role Role @relation(fields: [value], references: [value])
+  role Role @relation(fields: [value], references: [value], onDelete: Cascade)
   value String @db.VarChar(30)
   
   @@id([userid, value])
@@ -64,12 +64,59 @@ model Tasks {
   sequenceNumber Int @default(autoincrement())
   id Int @id @default(autoincrement())
   authorId Int
+  projectId Int
   tasksList TasksList @relation(fields: [tasksListId], references: [id], onDelete: Cascade)
   tasksListId Int
   title String @db.VarChar(100)
   description String? @db.VarChar(255)
   assignedAt DateTime @default(now())
+  taskField TaskField[]
+  taskFiledKInt TaskFieldInt[]
+  taskFiledStr TaskFieldStr[]
+  taskFieldPriority TaskFieldPriority[]
 }
 
+model TaskField {
+  id Int @id @default(autoincrement())
+  authorId Int
+  projectId Int
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  taskFieldType String @db.VarChar(3)
+  taskFieldTitle String @db.VarChar(100)
+  taskFiledKInt TaskFieldInt[]
+  taskFiledStr TaskFieldStr[]
+  taskFieldPriority TaskFieldPriority[]
+}
+
+model TaskFieldInt {
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  taskField TaskField @relation(fields: [taskFieldId], references: [id], onDelete: Cascade)
+  taskFieldId Int
+  value Int
+  
+  @@id([taskId, taskFieldId])
+}
+
+model TaskFieldStr {
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  taskField TaskField @relation(fields: [taskFieldId], references: [id], onDelete: Cascade)
+  taskFieldId Int
+  value String @db.VarChar(255)
+  
+  @@id([taskId, taskFieldId])
+}
+
+model TaskFieldPriority {
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  taskField TaskField @relation(fields: [taskFieldId], references: [id], onDelete: Cascade)
+  taskFieldId Int
+  priority String @db.VarChar(10)
+  
+  @@id([taskId, taskFieldId])
+}
 
 

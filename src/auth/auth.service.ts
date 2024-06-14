@@ -25,8 +25,7 @@ export class AuthService {
     }
 
     private async generateToken(email: string, id: number, role: string) {
-        const payload = { email: email, id: id, role: role }
-        return { token: this.jwtService.sign(payload) }
+        return { token: this.jwtService.sign({email: email, id: id, role: role}) }
     }
 
     private async validateUser(createUserDto: UserDto) {
