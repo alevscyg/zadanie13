@@ -53,7 +53,7 @@ export class ProjectsService {
                                 taskField: {
                                     include: {
                                         taskFieldInt: true,
-                                        taskFiledStr: true,
+                                        taskFieldStr: true,
                                     }
                                 }
                             }
@@ -79,7 +79,7 @@ export class ProjectsService {
                                 taskField: {
                                     include: {
                                         taskFieldInt: true,
-                                        taskFiledStr: true,
+                                        taskFieldStr: true,
                                     }
                                 }
                             }
@@ -225,7 +225,7 @@ export class ProjectsService {
                                 }
                             });
                         }
-                        else if (patchTaskDto.taskFieldType == "int" && taskFiled.taskFiledStr.length > 0){
+                        else if (patchTaskDto.taskFieldType == "int" && taskFiled.taskFieldStr.length > 0){
                             await this.databaseService.taskFieldStr.delete({
                                 where: {
                                     taskId_taskFieldId: {
@@ -265,7 +265,7 @@ export class ProjectsService {
                 taskField: {
                     include: {
                         taskFieldInt: true,
-                        taskFiledStr: true,
+                        taskFieldStr: true,
                     }
                 }
             }
@@ -342,7 +342,7 @@ export class ProjectsService {
             where: {id: taskFieldId} ,
             include: {
                 taskFieldInt: true,
-                taskFiledStr: true,
+                taskFieldStr: true,
             }
         });
         if(taskField)
@@ -403,7 +403,7 @@ export class ProjectsService {
     async updateTaskFieldValue(taskFieldValueDto: TasksFieldValueDto, authorId: number, taskFieldId: number){
         if(isNaN(taskFieldId)) throw new Error("Некорректный id");
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
-        if(taskField.taskFieldType == "str" && taskField.taskFiledStr.length > 0 && taskFieldValueDto.taskFieldStr){
+        if(taskField.taskFieldType == "str" && taskField.taskFieldStr.length > 0 && taskFieldValueDto.taskFieldStr){
             await this.databaseService.taskFieldStr.update({
                 where: {
                   taskId_taskFieldId: {
@@ -414,7 +414,7 @@ export class ProjectsService {
                 data: {value: taskFieldValueDto.taskFieldStr},
             });
         }
-        else if (taskField.taskFieldType == "str" && taskField.taskFiledStr.length == 0 && taskFieldValueDto.taskFieldStr){
+        else if (taskField.taskFieldType == "str" && taskField.taskFieldStr.length == 0 && taskFieldValueDto.taskFieldStr){
             await this.databaseService.taskFieldStr.create({data: {taskFieldId: taskField.id, taskId: taskField.taskId, value: taskFieldValueDto.taskFieldStr}});
         }
         if(taskField.taskFieldType == "int" && taskField.taskFieldInt.length > 0 && taskFieldValueDto.taskFieldInt){

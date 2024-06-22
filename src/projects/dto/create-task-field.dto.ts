@@ -1,11 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, Length, IsNumber, IsOptional } from "class-validator";
+import { IsEnum, IsString, Length, IsNumber, IsOptional } from "class-validator";
+
+enum TaskFieldType {
+    str = "str",
+    int = "int"
+}
 
 export class CreateTasksFieldDto{
-    @ApiProperty({example: "str", description: 'Тип поля задач'})
-    @Length(3, 3, {message: 'Должно быть длиной в 3 символа'})
-    @IsString({message: 'Должно быть строкой'})
-    readonly taskFieldType: string;
+    @ApiProperty({example: "str", description: "Доступные значения: str|int"})
+    @IsEnum(TaskFieldType, {message: "Доступные значения: str|int"})
+    readonly taskFieldType: TaskFieldType;
     @ApiProperty({example: "Сделать сегодня", description: 'Описание поля задач'})
     @Length(1, 100, {message: 'От 1 до 100 символов'})
     @IsString({message: 'Должно быть строкой'})

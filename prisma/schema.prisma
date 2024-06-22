@@ -71,10 +71,10 @@ model Tasks {
   title String @db.VarChar(100)
   description String? @db.VarChar(255)
   assignedAt DateTime @default(now())
-  taskField TaskField[]
   taskPriority TaskPriority[]
+  taskField TaskField[]
   taskFieldInt TaskFieldInt[]
-  taskFiledStr TaskFieldStr[]
+  taskFieldStr TaskFieldStr[]
 }
 
 enum Priority {
@@ -93,16 +93,21 @@ model TaskPriority {
   @@id([taskId, tasksListId])
 }
 
+enum TaskFieldType {
+  str
+  int
+}
+
 model TaskField {
   id Int @id @default(autoincrement())
   authorId Int
   projectId Int
   task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId Int
-  taskFieldType String @db.VarChar(3)
   taskFieldTitle String @db.VarChar(100)
+  taskFieldType TaskFieldType
   taskFieldInt TaskFieldInt[]
-  taskFiledStr TaskFieldStr[]
+  taskFieldStr TaskFieldStr[]
 }
 
 model TaskFieldInt {

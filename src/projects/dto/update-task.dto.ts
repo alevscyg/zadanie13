@@ -7,6 +7,11 @@ enum Priority {
     Low = "Low"
 }
 
+enum TaskFieldType {
+    str = "str",
+    int = "int"
+}
+
 export class UpdateTasksDto{
     @ApiProperty({example: "Найти место для дерева", description: 'Название задачи'})
     @Length(1, 100, {message: 'От 1 до 100 символов'})
@@ -18,11 +23,10 @@ export class UpdateTasksDto{
     @IsString({message: 'Должно быть строкой'})
     @IsOptional()
     readonly description?: string;
-    @ApiProperty({example: "str", description: 'Тип поля задач'})
-    @Length(3, 3, {message: 'Должно быть длиной в 3 символа'})
-    @IsString({message: 'Должно быть строкой'})
+    @ApiProperty({example: "str", description: "Доступные значения: str|int"})
+    @IsEnum(TaskFieldType, {message: "Доступные значения: str|int"})
     @IsOptional()
-    readonly taskFieldType?: string;
+    readonly taskFieldType?: TaskFieldType;
     @ApiProperty({example: "Сделать сегодня", description: 'Описание поля задач'})
     @Length(1, 100, {message: 'От 1 до 100 символов'})
     @IsString({message: 'Должно быть строкой'})
