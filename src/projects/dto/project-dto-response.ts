@@ -1,16 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class ProjectDtoResponse{
-    @ApiProperty({example: '1', description: 'ID проекта'})
-    readonly id: number;
-    @ApiProperty({example: '1', description: 'ID автора проекта'})
-    readonly authorId: number;
-    @ApiProperty({example: 'Посадить дерево', description: 'Название проекта'})
-    readonly title: string;
-    @ApiProperty({example: '.....', description: 'Описание проекта'})
-    readonly description: string;
-    @ApiProperty({example: "2024-06-06T23:43:05.276Z", description: 'Время создания проекта'})
-    readonly assignedAt: Date
     @ApiProperty({example: `{
     "id": 1,
     "authorId": 1,
@@ -101,26 +91,5 @@ export class ProjectDtoResponse{
         }
     ]
 }`})
-    readonly tasksList: tasksList[]
-}
-
-class tasksList{
-    readonly sequenceNumber: number;
-    readonly id: number;
-    readonly authorId: number;
-    readonly projectId: number;
-    readonly title: string;
-    readonly description: string;
-    readonly assignedAt: Date;
-    readonly tasks: tasks[]
-}
-
-class tasks{
-    readonly sequenceNumber: number;
-    readonly id: number;
-    readonly authorId: number;
-    readonly tasksListId: number;
-    readonly title: string;
-    readonly description: string;
-    readonly assignedAt: Date;
+    readonly project: any;
 }
