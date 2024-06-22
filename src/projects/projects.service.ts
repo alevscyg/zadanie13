@@ -354,16 +354,18 @@ export class ProjectsService {
         if(isNaN(taskFieldId)) throw new Error("Некорректный id");
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
         if(taskField){
-            if(updateTasksFiledDto.taskFieldType || updateTasksFiledDto.taskFieldTitle && (taskField.taskFieldTitle != updateTasksFiledDto.taskFieldTitle || taskField.taskFieldType != updateTasksFiledDto.taskFieldType)){
-                await this.databaseService.taskField.update({
-                    where: {
-                        id: taskField.id
-                    },
-                    data: {
-                        taskFieldType: updateTasksFiledDto.taskFieldType,
-                        taskFieldTitle: updateTasksFiledDto.taskFieldTitle
-                    }
-                });
+            if(updateTasksFiledDto.taskFieldType || updateTasksFiledDto.taskFieldTitle){
+                if(taskField.taskFieldTitle != updateTasksFiledDto.taskFieldTitle || taskField.taskFieldType != updateTasksFiledDto.taskFieldType){
+                    await this.databaseService.taskField.update({
+                        where: {
+                            id: taskField.id
+                        },
+                        data: {
+                            taskFieldType: updateTasksFiledDto.taskFieldType,
+                            taskFieldTitle: updateTasksFiledDto.taskFieldTitle
+                        }
+                    });
+                }
             }
             if(updateTasksFiledDto.taskFieldType == "str" && taskField.taskFieldInt.length > 0){
                 await this.databaseService.taskFieldInt.delete({
