@@ -377,7 +377,7 @@ export class ProjectsService {
                     }
                 });
             }
-            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFieldInt.length > 0){
+            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFieldStr.length > 0){
                 await this.databaseService.taskFieldStr.delete({
                     where: {
                         taskId_taskFieldId: {
