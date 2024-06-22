@@ -76,12 +76,19 @@ model Tasks {
   taskFieldInt TaskFieldInt[]
   taskFiledStr TaskFieldStr[]
 }
+
+enum Priority {
+  High
+  Medium
+  Low
+}
+
 model TaskPriority {
   task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId Int
   tasksList TasksList @relation(fields: [tasksListId], references: [id], onDelete: Cascade)
   tasksListId Int
-  taskPriority String @db.VarChar(10)
+  taskPriority Priority
   
   @@id([taskId, tasksListId])
 }
@@ -117,5 +124,3 @@ model TaskFieldStr {
   
   @@id([taskId, taskFieldId])
 }
-
-

@@ -85,7 +85,7 @@ export class ProjectsController {
   }
 
   @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Поменять листы местами'})
+  @ApiOperation({summary: 'Поменять листы местами. Пример ввода: 3-4'})
   @ApiResponse({status: 200})
   @Patch('listToList/:listToList')
   async moveListToList(@Req() req: Request, @Param('listToList') listToList: string ) {

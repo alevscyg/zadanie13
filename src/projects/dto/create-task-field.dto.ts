@@ -3,20 +3,20 @@ import { IsString, Length, IsNumber, IsOptional } from "class-validator";
 
 export class CreateTasksFieldDto{
     @ApiProperty({example: "str", description: 'Тип поля задач'})
-    @IsString({message: 'Должно быть строкой'})
     @Length(3, 3, {message: 'Должно быть длиной в 3 символа'})
+    @IsString({message: 'Должно быть строкой'})
     readonly taskFieldType: string;
     @ApiProperty({example: "Сделать сегодня", description: 'Описание поля задач'})
-    @IsString({message: 'Должно быть строкой'})
     @Length(1, 100, {message: 'От 1 до 100 символов'})
+    @IsString({message: 'Должно быть строкой'})
     readonly taskFieldTitle: string;
     @ApiProperty({example: 1, description: 'Числовое поле задачи'})
-    @IsOptional()
     @IsNumber({}, {message: "Должно быть числом"})
+    @IsOptional()
     readonly taskFieldInt?: number;
     @ApiProperty({example: "средний", description: 'Строковое поле задачи'})
-    @IsOptional()
-    @IsString({message: 'Должно быть строкой'})
     @Length(0, 255, {message: 'От 0 до 255 символов'})
+    @IsString({message: 'Должно быть строкой'})
+    @IsOptional()
     readonly taskFieldStr?: string;
 }

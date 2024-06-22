@@ -158,7 +158,7 @@ export class ProjectsService {
         const taskList = await this.findTasksListById(authorId, tasksListId);
         if(taskList){
             const task = await this.databaseService.tasks.create({ data: {title: createTaskstDto.title, description: createTaskstDto.description, projectId: taskList.projectId, tasksListId: tasksListId, authorId: authorId } });
-            if(["высокий", "средний", "низкий"].includes(createTaskstDto.taskPriority) ){
+            if(createTaskstDto.taskPriority) {
                 await this.databaseService.taskPriority.create({data: {taskId: task.id, tasksListId: taskList.id, taskPriority: createTaskstDto.taskPriority}});
             }
             if(createTaskstDto.taskFieldType && createTaskstDto.taskFieldTitle){
@@ -174,16 +174,23 @@ export class ProjectsService {
         if(isNaN(taskId)) throw new Error("Некорректный id задачи");
         const task = await this.findTaskById(authorId, taskId);
         if(task){
-            if(patchTaskDto.taskPriority != task.taskPriority[0].taskPriority && patchTaskDto.taskPriority != undefined){
-                await this.databaseService.taskPriority.update({
-                    where: {
-                      taskId_tasksListId: {
-                        taskId: taskId,
-                        tasksListId: task.tasksListId
-                      }
-                    },
-                    data: {taskPriority: patchTaskDto.taskPriority},
-                });
+            if(patchTaskDto.taskPriority){
+                if(task.taskPriority[0]){
+                    if(task.taskPriority[0].taskPriority != patchTaskDto.taskPriority){
+                        await this.databaseService.taskPriority.update({
+                            where: {
+                              taskId_tasksListId: {
+                                taskId: taskId,
+                                tasksListId: task.tasksListId
+                              }
+                            },
+                            data: {taskPriority: patchTaskDto.taskPriority},
+                        });
+                    }
+                }
+                else {
+                    await this.databaseService.taskPriority.create({data: {taskId: task.id, tasksListId: task.tasksListId, taskPriority: patchTaskDto.taskPriority}});
+                }
             }
             if(task.description != patchTaskDto.description || task.title != patchTaskDto.title){
                 await this.databaseService.tasks.update({where: {
@@ -229,12 +236,12 @@ export class ProjectsService {
                             });
                         }
                     }
-                    else{
-                        await this.createTaskField({taskFieldTitle: patchTaskDto.taskFieldTitle , taskFieldType: patchTaskDto.taskFieldType, taskFieldStr: patchTaskDto.taskFieldStr, taskFieldInt: patchTaskDto.taskFieldInt}, authorId, taskId);
-                    }
                 }
                 if(patchTaskDto.taskFieldInt || patchTaskDto.taskFieldStr)
                     await this.updateTaskFieldValue({taskFieldInt: patchTaskDto.taskFieldInt, taskFieldStr: patchTaskDto.taskFieldStr}, authorId, taskFieldId);
+            }
+            else if (taskURLSplit[1] == undefined && task.taskField[0] == undefined && patchTaskDto.taskFieldType && patchTaskDto.taskFieldTitle) {
+                await this.createTaskField({taskFieldTitle: patchTaskDto.taskFieldTitle , taskFieldType: patchTaskDto.taskFieldType, taskFieldStr: patchTaskDto.taskFieldStr, taskFieldInt: patchTaskDto.taskFieldInt}, authorId, taskId);
             }
             return await this.findTaskById(authorId, taskId);
         }
@@ -275,13 +282,15 @@ export class ProjectsService {
         const newTaskListId = Number(tasksToList[1]);
         const task = await this.findTaskById(authorId, taskId);
         if(task){
-            await this.databaseService.taskPriority.update({where: {
-                taskId_tasksListId: {
-                    taskId: taskId,
-                    tasksListId: task.tasksListId
-                }},
-                data: {tasksListId: newTaskListId}
-            });
+            if(task.taskPriority[0]){
+                await this.databaseService.taskPriority.update({where: {
+                    taskId_tasksListId: {
+                        taskId: taskId,
+                        tasksListId: task.tasksListId
+                    }},
+                    data: {tasksListId: newTaskListId}
+                });
+            }
             await this.databaseService.tasks.update({
                 where: {
                 id: taskId
@@ -289,7 +298,6 @@ export class ProjectsService {
                 data: {tasksListId: newTaskListId},
             });
         }
-        
     }
 
     async moveTaskToTask(taskToTasURL: string, authorId: number) {
@@ -299,7 +307,7 @@ export class ProjectsService {
         if(isNaN(task1Num) || isNaN(task2Num)) throw new Error("Некорректный id");
         const task1 = await this.databaseService.tasks.findMany({ where: { sequenceNumber: task1Num } });
         const task2 = await this.databaseService.tasks.findMany({ where: { sequenceNumber: task2Num } });
-        if(task1[0].authorId == authorId && task2[1].authorId){
+        if(task1[0].authorId == authorId && task2[0].authorId == authorId){
             await this.databaseService.tasks.update({
                 where: {
                   id: task1[0].id

@@ -3,12 +3,12 @@ import { IsString, Length, IsNumber, IsOptional } from "class-validator";
 
 export class TasksFieldValueDto{
     @ApiProperty({example: 1, description: 'Числовое поле задачи'})
-    @IsOptional()
     @IsNumber({}, {message: "Должно быть числом"})
-    readonly taskFieldInt: number;
-    @ApiProperty({example: "средний", description: 'Строковое поле задачи'})
     @IsOptional()
-    @IsString({message: 'Должно быть строкой'})
+    readonly taskFieldInt?: number;
+    @ApiProperty({example: "средний", description: 'Строковое поле задачи'})
     @Length(0, 255, {message: 'От 0 до 255 символов'})
-    readonly taskFieldStr: string;
+    @IsString({message: 'Должно быть строкой'})
+    @IsOptional()
+    readonly taskFieldStr?: string;
 }
