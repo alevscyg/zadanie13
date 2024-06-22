@@ -203,7 +203,7 @@ export class ProjectsService {
             }
             if(taskURLSplit[1]){
                 const taskFieldId = Number(taskURLSplit[1]);
-                if((patchTaskDto.taskFieldType && patchTaskDto.taskFieldTitle)){
+                if((patchTaskDto.taskFieldType || patchTaskDto.taskFieldTitle)){
                     const taskFiled = await this.findTaskFieldById(authorId, taskFieldId);
                     if(taskFiled){
                         if(taskFiled.taskFieldTitle != patchTaskDto.taskFieldTitle || taskFiled.taskFieldType != patchTaskDto.taskFieldType){
