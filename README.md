@@ -35,6 +35,9 @@ $ npm install
 
 # Start on localhost
 ```bash
+## Docker DBPostgres
+$ docker-compose up
+
 ## Database migration
 $ npx prisma migrate dev --name init
 
