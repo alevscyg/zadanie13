@@ -92,4 +92,8 @@ export class ProjectDtoResponse{
     ]
 }`})
     readonly project: any;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> a1fcf951088a9cbc9dc635e69141af851b079614
