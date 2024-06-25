@@ -203,7 +203,7 @@ export class ProjectsService {
             }
             if(taskURLSplit[1]){
                 const taskFieldId = Number(taskURLSplit[1]);
-                if((patchTaskDto.taskFieldType && patchTaskDto.taskFieldTitle)){
+                if((patchTaskDto.taskFieldType || patchTaskDto.taskFieldTitle)){
                     const taskFiled = await this.findTaskFieldById(authorId, taskFieldId);
                     if(taskFiled){
                         if(taskFiled.taskFieldTitle != patchTaskDto.taskFieldTitle || taskFiled.taskFieldType != patchTaskDto.taskFieldType){
@@ -354,16 +354,18 @@ export class ProjectsService {
         if(isNaN(taskFieldId)) throw new Error("Некорректный id");
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
         if(taskField){
-            if(updateTasksFiledDto.taskFieldType || updateTasksFiledDto.taskFieldTitle && (taskField.taskFieldTitle != updateTasksFiledDto.taskFieldTitle || taskField.taskFieldType != updateTasksFiledDto.taskFieldType)){
-                await this.databaseService.taskField.update({
-                    where: {
-                        id: taskField.id
-                    },
-                    data: {
-                        taskFieldType: updateTasksFiledDto.taskFieldType,
-                        taskFieldTitle: updateTasksFiledDto.taskFieldTitle
-                    }
-                });
+            if(updateTasksFiledDto.taskFieldType || updateTasksFiledDto.taskFieldTitle){
+                if(taskField.taskFieldTitle != updateTasksFiledDto.taskFieldTitle || taskField.taskFieldType != updateTasksFiledDto.taskFieldType){
+                    await this.databaseService.taskField.update({
+                        where: {
+                            id: taskField.id
+                        },
+                        data: {
+                            taskFieldType: updateTasksFiledDto.taskFieldType,
+                            taskFieldTitle: updateTasksFiledDto.taskFieldTitle
+                        }
+                    });
+                }
             }
             if(updateTasksFiledDto.taskFieldType == "str" && taskField.taskFieldInt.length > 0){
                 await this.databaseService.taskFieldInt.delete({
@@ -375,7 +377,7 @@ export class ProjectsService {
                     }
                 });
             }
-            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFieldInt.length > 0){
+            else if (updateTasksFiledDto.taskFieldType == "int" && taskField.taskFieldStr.length > 0){
                 await this.databaseService.taskFieldStr.delete({
                     where: {
                         taskId_taskFieldId: {
