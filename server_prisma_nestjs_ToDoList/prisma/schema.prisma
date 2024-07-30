@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique @db.VarChar(255)
+  password String @db.VarChar(255)
+  banned Boolean @default(false)
+  banReason String? @db.VarChar(100)
+  role UserRole[]
+  prjects Project[]
+}
+
+model Role {
+  value String @id @db.VarChar(30)
+  description String @db.VarChar(255)
+  users UserRole[]
+}
+
+model UserRole {
+  user User @relation(fields: [userid], references: [id], onDelete: Cascade)
+  userid Int
+  role Role @relation(fields: [value], references: [value], onDelete: Cascade)
+  value String @db.VarChar(30)
+  
+  @@id([userid, value])
+}
+
+model Project {
+  id Int @id @default(autoincrement())
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId Int
+  title String @db.VarChar(100)
+  description String? @db.VarChar(255)
+  assignedAt DateTime @default(now())
+  tasksList TasksList[]
+}
+
+model TasksList {
+  sequenceNumber Int @default(autoincrement())
+  id Int @id @default(autoincrement())
+  authorId Int
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  title String @db.VarChar(100)
+  description String? @db.VarChar(255)
+  assignedAt DateTime @default(now())
+  tasks Tasks[]
+  taskPriority TaskPriority[]
+}
+
+model Tasks {
+  sequenceNumber Int @default(autoincrement())
+  id Int @id @default(autoincrement())
+  authorId Int
+  projectId Int
+  tasksList TasksList @relation(fields: [tasksListId], references: [id], onDelete: Cascade)
+  tasksListId Int
+  title String @db.VarChar(100)
+  description String? @db.VarChar(255)
+  assignedAt DateTime @default(now())
+  taskPriority TaskPriority[]
+  taskField TaskField[]
+}
+
+enum Priority {
+  High
+  Medium
+  Low
+}
+
+model TaskPriority {
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  tasksList TasksList @relation(fields: [tasksListId], references: [id], onDelete: Cascade)
+  tasksListId Int
+  taskPriority Priority
+  
+  @@id([taskId, tasksListId])
+}
+
+enum TaskFieldType {
+  str
+  int
+}
+
+model TaskField {
+  id Int @id @default(autoincrement())
+  authorId Int
+  projectId Int
+  task Tasks @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int
+  taskFieldTitle String @db.VarChar(100)
+  taskFieldType TaskFieldType
+}
+
