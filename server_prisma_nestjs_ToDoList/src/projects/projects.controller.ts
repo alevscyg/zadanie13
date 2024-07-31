@@ -206,6 +206,15 @@ export class ProjectsController {
     return await this.projectsService.updateTaskFieldById(updateTasksFiledDto, req.user.id, +taskFieldId);
   }
 
+  @UseGuards(JwtAuthguard)
+  @ApiOperation({summary: 'Удалить поле задачи'})
+  @ApiResponse({status: 200})
+  @Delete('tasksFiled/:taskFieldId')
+  async deleteTaskField(@Req() req: Request, @Param('taskFieldId') taskFieldId: string ) {
+    // @ts-expect-error
+    return await this.projectsService.deleteTaskFieldById(req.user.id, +taskFieldId);
+  }
+
   /////////// Значения полей задач \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   @UsePipes(ValidationPipe)
@@ -255,14 +264,5 @@ export class ProjectsController {
   async deleteTaskFieldValue(@Req() req: Request, @Param('taskFieldid') taskFieldid: string) {
     // @ts-expect-error
     return await this.projectsService.deleteTaskFieldValueGolang(req.user.id, +taskFieldid);
-  }
-
-  @UseGuards(JwtAuthguard)
-  @ApiOperation({summary: 'Найти поле задачи по id'})
-  @ApiResponse({status: 200})
-  @Get('taskFieldWithValue/:taskFieldId')
-  async findTaskFieldByIdWithValue(@Req() req: Request, @Param('taskFieldId') taskFieldId: string) {
-    // @ts-expect-error
-    return await this.projectsService.findTaskFieldByIdWithValue(req.user.id, +taskFieldId);
   }
 }

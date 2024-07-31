@@ -102,7 +102,7 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 			if toDo.Pattern == "createTaskFiledInt" {
 				// Create int
 				result, err := handler.CreateTaskFieldInt(toDo.Data.TaskId, toDo.Data.TaskFieldId, toDo.Data.TaskFieldInt, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler CREATE INT")
 				body, err := json.Marshal(result)
 				failOnError(err, "Failed Marshal")
 				err = ch.PublishWithContext(ctx,
@@ -119,7 +119,7 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 			} else if toDo.Pattern == "createTaskFiledStr" {
 				// Create str
 				result, err := handler.CreateTaskFieldStr(toDo.Data.TaskId, toDo.Data.TaskFieldId, toDo.Data.TaskFieldStr, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler CREATE STR")
 				body, err := json.Marshal(result)
 				failOnError(err, "Failed Marshal")
 				err = ch.PublishWithContext(ctx,
@@ -136,7 +136,7 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 			} else if toDo.Pattern == "updateTaskFiledInt" {
 				// Update int
 				result, err := handler.UpdateTaskFieldInt(toDo.Data.TaskId, toDo.Data.TaskFieldId, toDo.Data.TaskFieldInt, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler UPDATE INT")
 				body, err := json.Marshal(result)
 				failOnError(err, "Failed Marshal")
 				err = ch.PublishWithContext(ctx,
@@ -153,7 +153,7 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 			} else if toDo.Pattern == "updateTaskFiledStr" {
 				// Update str
 				result, err := handler.UpdateTaskFieldStr(toDo.Data.TaskId, toDo.Data.TaskFieldId, toDo.Data.TaskFieldStr, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler UPDATE STR")
 				body, err := json.Marshal(result)
 				failOnError(err, "Failed Marshal")
 				err = ch.PublishWithContext(ctx,
@@ -170,9 +170,9 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 			} else if toDo.Pattern == "getAllTaskFiledValuesByTaskId" {
 				// GetByTaskId
 				resultInt, err := handler.GetAllTaskFieldIntByTaskId(toDo.Data.TaskId, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler GET TASKFIELD INT BY FIELDID")
 				resultStr, err := handler.GetAllTaskFieldStrByTaskId(toDo.Data.TaskId, store)
-				failOnError(err, "Failed RequestHandler")
+				failOnError(err, "Failed RequestHandler GET TASKFIELD STR BY FIELDID")
 				getByTaskId := GetByTaskId{
 					TaskFieldInt: resultInt,
 					TaskFieldStr: resultStr,
@@ -194,41 +194,67 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 				// GetByTaskFieldId
 				if toDo.Data.TaskFieldType == "int" {
 					result, err := handler.GetTaskFieldIntByTaskFieldId(toDo.Data.TaskId, toDo.Data.TaskFieldId, store)
-					failOnError(err, "Failed RequestHandler")
-					body, err := json.Marshal(result)
-					failOnError(err, "Failed Marshal")
-					err = ch.PublishWithContext(ctx,
-						"",        // exchange
-						d.ReplyTo, // routing key
-						false,     // mandatory
-						false,     // immediate
-						amqp091.Publishing{
-							ContentType:   "application/json",
-							CorrelationId: d.CorrelationId,
-							Body:          []byte(body),
-						})
-					failOnError(err, "Failed to publish a message")
+					if err != nil {
+						err = ch.PublishWithContext(ctx,
+							"",        // exchange
+							d.ReplyTo, // routing key
+							false,     // mandatory
+							false,     // immediate
+							amqp091.Publishing{
+								ContentType:   "application/json",
+								CorrelationId: d.CorrelationId,
+								Body:          []byte("FALSE"),
+							})
+						failOnError(err, "Failed to publish a message")
+					} else {
+						body, err := json.Marshal(result)
+						failOnError(err, "Failed Marshal")
+						err = ch.PublishWithContext(ctx,
+							"",        // exchange
+							d.ReplyTo, // routing key
+							false,     // mandatory
+							false,     // immediate
+							amqp091.Publishing{
+								ContentType:   "application/json",
+								CorrelationId: d.CorrelationId,
+								Body:          []byte(body),
+							})
+						failOnError(err, "Failed to publish a message")
+					}
 				} else if toDo.Data.TaskFieldType == "str" {
 					result, err := handler.GetTaskFieldStrByTaskFieldId(toDo.Data.TaskId, toDo.Data.TaskFieldId, store)
-					failOnError(err, "Failed RequestHandler")
-					body, err := json.Marshal(result)
-					failOnError(err, "Failed Marshal")
-					err = ch.PublishWithContext(ctx,
-						"",        // exchange
-						d.ReplyTo, // routing key
-						false,     // mandatory
-						false,     // immediate
-						amqp091.Publishing{
-							ContentType:   "application/json",
-							CorrelationId: d.CorrelationId,
-							Body:          []byte(body),
-						})
-					failOnError(err, "Failed to publish a message")
+					if err != nil {
+						err = ch.PublishWithContext(ctx,
+							"",        // exchange
+							d.ReplyTo, // routing key
+							false,     // mandatory
+							false,     // immediate
+							amqp091.Publishing{
+								ContentType:   "application/json",
+								CorrelationId: d.CorrelationId,
+								Body:          []byte("FALSE"),
+							})
+						failOnError(err, "Failed to publish a message")
+					} else {
+						body, err := json.Marshal(result)
+						failOnError(err, "Failed Marshal")
+						err = ch.PublishWithContext(ctx,
+							"",        // exchange
+							d.ReplyTo, // routing key
+							false,     // mandatory
+							false,     // immediate
+							amqp091.Publishing{
+								ContentType:   "application/json",
+								CorrelationId: d.CorrelationId,
+								Body:          []byte(body),
+							})
+						failOnError(err, "Failed to publish a message")
+					}
 				}
 			} else if toDo.Pattern == "deleteTaskFiledValue" {
 				if toDo.Data.TaskFieldType == "int" {
 					err := handler.DeleteTaskFieldIntByTaskFieldId(toDo.Data.TaskId, toDo.Data.TaskFieldId, store)
-					failOnError(err, "Failed RequestHandler")
+					failOnError(err, "Failed RequestHandler DELETE INT")
 					err = ch.PublishWithContext(ctx,
 						"",        // exchange
 						d.ReplyTo, // routing key
@@ -237,12 +263,12 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 						amqp091.Publishing{
 							ContentType:   "application/json",
 							CorrelationId: d.CorrelationId,
-							Body:          []byte("ok"),
+							Body:          []byte("Поле задачи и taskFieldValue удалены."),
 						})
 					failOnError(err, "Failed to publish a message")
 				} else if toDo.Data.TaskFieldType == "str" {
 					err := handler.DeleteTaskFieldStrByTaskFieldId(toDo.Data.TaskId, toDo.Data.TaskFieldId, store)
-					failOnError(err, "Failed RequestHandler")
+					failOnError(err, "Failed RequestHandler DELETE STR")
 					err = ch.PublishWithContext(ctx,
 						"",        // exchange
 						d.ReplyTo, // routing key
@@ -251,7 +277,7 @@ func RabbitMqStart(RABBITMQ_URL string, RABBITMQ_TASKFIELDVALUE_QUEUE string, Da
 						amqp091.Publishing{
 							ContentType:   "application/json",
 							CorrelationId: d.CorrelationId,
-							Body:          []byte("ok"),
+							Body:          []byte("Поле задачи и taskFieldValue удалены."),
 						})
 					failOnError(err, "Failed to publish a message")
 				}

@@ -315,6 +315,7 @@ export class ProjectsService {
                     taskFieldValue: taskFieldValue.value
                 }
             }
+            return taskField
         }
     }
 
@@ -324,7 +325,20 @@ export class ProjectsService {
             where: {id: taskFieldId, authorId: authorId}
         });
         if(taskField) {
-            return taskField
+            const ob$ = this.rabbitTaskFieldValueService.send('getTaskFiledValueByTaskFieldId', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
+            const taskFieldValue = await firstValueFrom(ob$).catch((err) => console.error(err));
+            if (taskFieldValue == "FALSE") {
+                return taskField
+            } 
+            return {
+                        id: taskField.id,
+                        authorId: taskField.authorId,
+                        projectId: taskField.projectId,
+                        taskId: taskField.taskId,
+                        taskFieldTitle: taskField.taskFieldTitle,
+                        taskFieldType: taskField.taskFieldType,
+                        taskFieldValue: taskFieldValue.value
+                    }
         }
         throw new Error(`Поля с id ${taskFieldId} не существует`)
     }
@@ -346,11 +360,55 @@ export class ProjectsService {
                     });
                 }
             }
-            if(updateTasksFiledDto.taskFieldType != taskField.taskFieldType){
-                const ob$ = this.rabbitTaskFieldValueService.send('deleteTaskFiledValue', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
-                await firstValueFrom(ob$).catch((err) => console.error(err));
+            const ob$ = this.rabbitTaskFieldValueService.send('getTaskFiledValueByTaskFieldId', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
+            const taskFieldValue = await firstValueFrom(ob$).catch((err) => console.error(err));
+            if (taskFieldValue != "FALSE") {
+                if (updateTasksFiledDto.taskFieldType) {
+                    if (updateTasksFiledDto.taskFieldType != taskField.taskFieldType) {
+                        const ob1$ = this.rabbitTaskFieldValueService.send('deleteTaskFiledValue', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
+                        await firstValueFrom(ob1$).catch((err) => console.error(err));
+                        if (updateTasksFiledDto.taskFieldType == "int" && updateTasksFiledDto.taskFieldInt) {
+                            const ob1$ = this.rabbitTaskFieldValueService.send('createTaskFiledInt', { taskFieldInt: updateTasksFiledDto.taskFieldInt, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                            await firstValueFrom(ob1$).catch((err) => console.error(err));
+                        }
+                        else if (updateTasksFiledDto.taskFieldType == "str" && updateTasksFiledDto.taskFieldStr) {
+                            const ob1$ = this.rabbitTaskFieldValueService.send('createTaskFiledStr', { taskFieldStr: updateTasksFiledDto.taskFieldStr, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                            await firstValueFrom(ob1$).catch((err) => console.error(err));
+                        }
+                    }
+                    else {
+                        if (updateTasksFiledDto.taskFieldInt){
+                            const ob1$ = this.rabbitTaskFieldValueService.send('updateTaskFiledInt', { taskFieldInt: updateTasksFiledDto.taskFieldInt, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                            await firstValueFrom(ob1$).catch((err) => console.error(err));
+                        }
+                        else if (updateTasksFiledDto.taskFieldStr){
+                            const ob1$ = this.rabbitTaskFieldValueService.send('updateTaskFiledStr', { taskFieldStr: updateTasksFiledDto.taskFieldStr, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                            await firstValueFrom(ob1$).catch((err) => console.error(err));
+                        }
+                    }
+                }
+            }
+            else {
+                if (((taskField.taskFieldType == "int" && updateTasksFiledDto.taskFieldType == undefined) || updateTasksFiledDto.taskFieldType == "int") && updateTasksFiledDto.taskFieldInt){
+                    const ob1$ = this.rabbitTaskFieldValueService.send('createTaskFiledInt', { taskFieldInt: updateTasksFiledDto.taskFieldInt, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                    await firstValueFrom(ob1$).catch((err) => console.error(err));
+                }
+                else if (((taskField.taskFieldType == "str" && updateTasksFiledDto.taskFieldType == undefined) || updateTasksFiledDto.taskFieldType == "str") && updateTasksFiledDto.taskFieldStr){
+                    const ob1$ = this.rabbitTaskFieldValueService.send('createTaskFiledStr', { taskFieldStr: updateTasksFiledDto.taskFieldStr, taskId: taskField.taskId, taskFieldId: taskFieldId });
+                    await firstValueFrom(ob1$).catch((err) => console.error(err));
+                }
             }
             return await this.findTaskFieldById(authorId, taskFieldId);
+        }
+    }
+
+    async deleteTaskFieldById(authorId: number, taskFieldId: number){
+        if(isNaN(taskFieldId)) throw new Error("Некорректный id");
+        const taskField = await this.findTaskFieldById(authorId, taskFieldId);
+        if(taskField) {
+            await this.databaseService.taskField.delete({ where: { id: taskField.id, authorId: taskField.authorId } });
+            const ob1$ = this.rabbitTaskFieldValueService.send('deleteTaskFiledValue', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
+            return await firstValueFrom(ob1$).catch((err) => console.error(err));
         }
     }
 
@@ -390,27 +448,5 @@ export class ProjectsService {
         const taskField = await this.findTaskFieldById(authorId, taskFieldId);
         return this.rabbitTaskFieldValueService.send('deleteTaskFiledValue', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
     }
-
-    async findTaskFieldByIdWithValue(authorId: number, taskFieldId: number){ 
-        if(isNaN(taskFieldId)) throw new Error("Некорректный id");
-        const taskField = await this.databaseService.taskField.findUnique({
-            where: {id: taskFieldId, authorId: authorId}
-        });
-        if(taskField) {
-            const ob$ = this.rabbitTaskFieldValueService.send('getTaskFiledValueByTaskFieldId', { taskId: taskField.taskId, taskFieldId: taskFieldId , taskFieldType: taskField.taskFieldType});
-            const taskFieldValue = await firstValueFrom(ob$).catch((err) => console.error(err));
-            return {
-                        id: taskField.id,
-                        authorId: taskField.authorId,
-                        projectId: taskField.projectId,
-                        taskId: taskField.taskId,
-                        taskFieldTitle: taskField.taskFieldTitle,
-                        taskFieldType: taskField.taskFieldType,
-                        taskFieldValue: taskFieldValue.value
-                    }
-        }
-        throw new Error(`Поля с id ${taskFieldId} не существует`)
-    }
-
     ////////
 }
