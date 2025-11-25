@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13.4-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    volumes:
+      - /var/lib/rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    env_file:
+      - .env
+
+  db_postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: qwe
+      POSTGRES_USER: postgres
+      POSTGRES_DB: zadanie13_docker
+    ports:
+      - 5476:5432
+    volumes:
+      - pgdataToDoList:/var/lib/postgresql/data
+    restart: always
+    container_name: db_postgres
+
+  todolist:
+    build:
+      context: ./server_prisma_nestjs_ToDoList
+    ports:
+      - 3000:3000
+    container_name: todolist
+    depends_on:
+      - rabbitmq
+      - db_postgres
+    command: npm run start
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+  
+volumes:
+  pgdataToDoList:

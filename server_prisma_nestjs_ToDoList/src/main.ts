@@ -4,13 +4,13 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {cors:true});
   const PORT = process.env.PORT || 3001
   const config = new DocumentBuilder()
         .setTitle('ToDoList')
         .setDescription('Документация REST API')
         .setVersion('1.0.0')
-        .addTag('Zadanie13')
+        .addTag('Kursovaya')
         .build()
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('/api/docs', app, document)
